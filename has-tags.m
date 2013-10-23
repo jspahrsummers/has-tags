@@ -16,29 +16,27 @@ int main (int argc, const char **argv) {
 		const char **tags = argv + 2;
 		int tagCount = argc - 2;
 
-		ssize_t len = getxattr(path, TAGS_XATTR_NAME, NULL, 0, 0, TAGS_XATTR_OPTIONS);
-		if (len == 0) {
-			NSLog(@"%s does not have any tags", path);
-			return EXIT_FAILURE;
-		} else if (len < 0) {
-			NSLog(@"Error reading xattrs for %s: %s", path, strerror(errno));
-			return EXIT_FAILURE;
-		}
+		void *buffer = NULL;
+		NSUInteger bufferLength = 0;
+		do {
+			ssize_t len = getxattr(path, TAGS_XATTR_NAME, NULL, 0, 0, TAGS_XATTR_OPTIONS);
+			if (len <= 0) {
+				return EXIT_FAILURE;
+			}
 
-		void *buffer = calloc(1, (size_t)len);
-		ssize_t newLen = getxattr(path, TAGS_XATTR_NAME, buffer, (size_t)len, 0, TAGS_XATTR_OPTIONS);
-		if (newLen == 0) {
-			NSLog(@"%s does not have any tags", path);
-			return EXIT_FAILURE;
-		} else if (newLen < 0) {
-			NSLog(@"Error reading xattrs for %s: %s", path, strerror(errno));
-			return EXIT_FAILURE;
-		} else if (newLen > len) {
-			NSLog(@"Found greater length (%lli) for xattr than originally returned (%lli)", (long long)newLen, (long long)len);
-			return EXIT_FAILURE;
-		}
+			bufferLength = (NSUInteger)len;
+			buffer = calloc(1, bufferLength);
 
-		NSData *data = [[NSData alloc] initWithBytesNoCopy:buffer length:(NSUInteger)newLen freeWhenDone:YES];
+			ssize_t newLen = getxattr(path, TAGS_XATTR_NAME, buffer, bufferLength, 0, TAGS_XATTR_OPTIONS);
+			if (newLen <= 0) {
+				return EXIT_FAILURE;
+			} else if (newLen > len) {
+				free(buffer);
+				buffer = NULL;
+			}
+		} while (buffer == NULL);
+
+		NSData *data = [[NSData alloc] initWithBytesNoCopy:buffer length:bufferLength freeWhenDone:YES];
 
 		NSError *error = nil;
 		NSArray *rawTags = [NSPropertyListSerialization propertyListWithData:data options:NSPropertyListImmutable format:NULL error:&error];
@@ -56,7 +54,6 @@ int main (int argc, const char **argv) {
 		for (int i = 0; i < tagCount; i++) {
 			NSString *tag = @(tags[i]);
 			if (![tagNames containsObject:tag]) {
-				NSLog(@"%s does not have tag \"%@\"", path, tag);
 				return EXIT_FAILURE;
 			}
 		}
