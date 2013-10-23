@@ -3,6 +3,13 @@
 `has-tags` is a small command line utility for OS X Mavericks that tests whether
 a file or folder matches a set of tags.
 
+## Installation
+
+```sh
+make
+[sudo] make install
+```
+
 ## Usage
 
 ```sh
