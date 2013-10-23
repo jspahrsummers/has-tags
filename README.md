@@ -30,5 +30,5 @@ has-tags README.md Red && echo "This README is totes red"
 To find all files matching a set of tags within a folder:
 
 ```sh
-find . -exec has-tags {} Red \; -print
+find . -exec has-tags {} Red Green Blue \; -print
 ```
