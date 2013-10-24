@@ -1,7 +1,7 @@
 all: has-tags
 
 has-tags:
-	xcrun clang -Weverything -Ofast -ObjC -framework Foundation -o $@ has-tags.m
+	xcrun clang -Wall -Ofast -framework CoreFoundation -o $@ has-tags.c
 
 install:
 	install -Ss has-tags /usr/local/bin
