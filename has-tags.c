@@ -14,17 +14,17 @@ int main (int argc, const char **argv) {
 	const char **tags = argv + 2;
 	int tagCount = argc - 2;
 
+	CFIndex bufferLength = 128;
 	void * restrict buffer;
-	CFIndex bufferLength, newLength;
+
+	CFIndex originalLength;
 	do {
-		bufferLength = getxattr(path, TAGS_XATTR_NAME, NULL, 0, 0, TAGS_XATTR_OPTIONS);
-		if (bufferLength <= 0) return EXIT_FAILURE;
-
 		buffer = alloca((size_t)bufferLength);
+		originalLength = bufferLength;
 
-		newLength = getxattr(path, TAGS_XATTR_NAME, buffer, (size_t)bufferLength, 0, TAGS_XATTR_OPTIONS);
-		if (newLength <= 0) return EXIT_FAILURE;
-	} while (newLength > bufferLength);
+		bufferLength = getxattr(path, TAGS_XATTR_NAME, buffer, (size_t)originalLength, 0, TAGS_XATTR_OPTIONS);
+		if (bufferLength <= 0) return EXIT_FAILURE;
+	} while (bufferLength > originalLength);
 
 	CFDataRef data = CFDataCreateWithBytesNoCopy(NULL, buffer, bufferLength, kCFAllocatorNull);
 
